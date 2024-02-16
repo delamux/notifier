@@ -12,12 +12,11 @@
  * @since         1.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace Bakkerij\Notifier\Utility;
 
 use Cake\Core\Configure;
-use Cake\Core\Plugin;
 use Cake\ORM\TableRegistry;
-use Cake\Utility\Text;
 
 /**
  * Notifier component
@@ -43,6 +42,7 @@ class NotificationManager
         if (empty(static::$_generalManager)) {
             static::$_generalManager = new NotificationManager();
         }
+
         return static::$_generalManager;
     }
 
@@ -75,7 +75,7 @@ class NotificationManager
      */
     public function notify($data)
     {
-        $model = TableRegistry::get('Bakkerij/Notifier.Notifications');
+        $model = TableRegistry::getTableLocator()->get('Bakkerij/Notifier.Notifications');
 
         $_data = [
             'users' => [],
@@ -87,24 +87,39 @@ class NotificationManager
 
         $data = array_merge($_data, $data);
 
-        foreach ((array)$data['recipientLists'] as $recipientList) {
-            $list = (array)$this->getRecipientList($recipientList);
-            $data['users'] = array_merge($data['users'], $list);
+        $data['users'] = $this->mergeRecipientList($data);
+
+
+        $commonData = [
+            'template' => $data['template'],
+            'tracking_id' => $data['tracking_id'],
+            'vars' => $data['vars'],
+            'state' => 1
+        ];
+
+        $entities = [];
+        foreach ((array)$data['users'] as $userId) {
+            $entities[] = array_merge($commonData, ['user_id' => $userId]);
         }
 
-        foreach ((array)$data['users'] as $user) {
-            $entity = $model->newEntity();
-
-            $entity->set('template', $data['template']);
-            $entity->set('tracking_id', $data['tracking_id']);
-            $entity->set('vars', $data['vars']);
-            $entity->set('state', 1);
-            $entity->set('user_id', $user);
-
-            $model->save($entity);
-        }
+        $entity = $model->newEntities();
+        $model->saveMany($entity);
 
         return $data['tracking_id'];
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    private function mergeRecipientList($data) {
+        $users = $data['users'];
+        foreach ((array)$data['recipientLists'] as $recipientList) {
+            $list = (array)$this->getRecipientList($recipientList);
+            $users = array_merge($users, $list);
+        }
+
+        return $users;
     }
 
     /**
