@@ -98,8 +98,8 @@ class NotifierComponent extends Component
      * @param int|null $userId Id of the user.
      * @param bool|null $state The state of notifications: `true` for unread, `false` for read, `null` for all.
      * @return array
-     * TODO add version in deprecated
-     * @deprecated 1 use getReadNotifications or getUnreadNotifications instead.
+     *
+     * @deprecated 1.3 use getReadNotifications or getUnreadNotifications instead.
      */
     public function getNotifications($userId = null, $state = null)
     {
