@@ -24,6 +24,8 @@ use Cake\ORM\TableRegistry;
  */
 class NotifierComponent extends Component
 {
+    const UNREAD_STATUS = 1;
+    const READ_STATUS = 0;
     /**
      * Default configuration.
      *
@@ -157,6 +159,9 @@ class NotifierComponent extends Component
      *  // for a specific user, use the first parameter for the user_id
      *  $this->Notifier->getNotifications(1);
      *
+     * // for and specific user you can add also ORM conditions for the where and order
+     *
+     * $this->Notifier->getNotifications(1, [whereConditions => ['']]);
      *
      * ```
      * @param int $userId
@@ -168,7 +173,7 @@ class NotifierComponent extends Component
      */
     public function getReadNotificationsBy($userId, $options)
     {
-        $readCondition = ['state' => 0];
+        $readCondition = ['whereConditions' => ['state' => self::READ_STATUS]];
         $conditions = array_merge($options, $unreadCondition);
 
         return $this->getNotificationsFactory($userId, $conditions);
@@ -198,7 +203,7 @@ class NotifierComponent extends Component
      */
     public function getUnReadNotificationsBy($userId, $options)
     {
-        $unreadCondition = ['state' => 1];
+        $readCondition = ['whereConditions' => ['state' => self::UNREAD_STATUS]];
         $conditions = array_merge($options, $unreadCondition);
 
         return $this->getNotificationsFactory($userId, $conditions);
@@ -224,10 +229,6 @@ class NotifierComponent extends Component
         ];
 
         $order = ['created' => 'desc'];
-
-        if (array_key_exists('state', $options)) {
-            $whereConditions = array_merge($whereConditions, $options['state']);
-        }
 
         if (array_key_exists('whereConditions', $options)) {
             $whereConditions = array_merge($whereConditions, $options['whereConditions']);
@@ -303,7 +304,7 @@ class NotifierComponent extends Component
         if (!$notificationId) {
             $query = $this->table->find('all')->where([
                 'user_id' => $user,
-                'state' => 1
+                'state' => self::UNREAD_STATUS
             ]);
         } else {
             $query = $this->table->find('all')->where([
@@ -314,7 +315,7 @@ class NotifierComponent extends Component
         }
 
         foreach ($query as $item) {
-            $item->set('state', 0);
+            $item->set('state', self::READ_STATUS);
             $model->save($item);
         }
     }
