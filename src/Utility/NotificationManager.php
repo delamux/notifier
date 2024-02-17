@@ -15,6 +15,7 @@
 
 namespace Bakkerij\Notifier\Utility;
 
+use Bakkerij\Notifier\Model\Entity\Notification;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 
@@ -82,28 +83,23 @@ class NotificationManager
             'recipientLists' => [],
             'template' => 'default',
             'vars' => [],
-            'tracking_id' => $this->getTrackingId()
+            'tracking_id' => $this->getTrackingId(),
+            'state' => Notification::UNREAD_STATUS,
         ];
 
         $data = array_merge($_data, $data);
 
         $data['users'] = $this->mergeRecipientList($data);
 
-
-        $commonData = [
-            'template' => $data['template'],
-            'tracking_id' => $data['tracking_id'],
-            'vars' => $data['vars'],
-            'state' => 1
-        ];
-
         $entities = [];
         foreach ((array)$data['users'] as $userId) {
-            $entities[] = array_merge($commonData, ['user_id' => $userId]);
+            $finalData = array_merge($data, ['user_id' => $userId]);
+            $entity = $model->newEntity($finalData);
+            $entity->set('vars', $data['vars']);
+            $entities[] = $entity;
         }
 
-        $entity = $model->newEntities();
-        $model->saveMany($entity);
+        $model->saveMany($entities);
 
         return $data['tracking_id'];
     }
@@ -112,7 +108,8 @@ class NotificationManager
      * @param array $data
      * @return array
      */
-    private function mergeRecipientList($data) {
+    private function mergeRecipientList($data)
+    {
         $users = $data['users'];
         foreach ((array)$data['recipientLists'] as $recipientList) {
             $list = (array)$this->getRecipientList($recipientList);

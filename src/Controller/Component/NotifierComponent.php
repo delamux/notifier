@@ -15,6 +15,7 @@
 
 namespace Bakkerij\Notifier\Controller\Component;
 
+use Bakkerij\Notifier\Model\Entity\Notification;
 use Bakkerij\Notifier\Utility\NotificationManager;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
@@ -24,8 +25,6 @@ use Cake\ORM\TableRegistry;
  */
 class NotifierComponent extends Component
 {
-    const UNREAD_STATUS = 1;
-    const READ_STATUS = 0;
     /**
      * Default configuration.
      *
@@ -173,8 +172,8 @@ class NotifierComponent extends Component
      */
     public function getReadNotificationsBy($userId, $options)
     {
-        $readCondition = ['whereConditions' => ['state' => self::READ_STATUS]];
-        $conditions = array_merge($options, $unreadCondition);
+        $readCondition = ['whereConditions' => ['state' => Notification::READ_STATUS]];
+        $conditions = array_merge($options, $readCondition);
 
         return $this->getNotificationsFactory($userId, $conditions);
     }
@@ -203,7 +202,7 @@ class NotifierComponent extends Component
      */
     public function getUnReadNotificationsBy($userId, $options)
     {
-        $readCondition = ['whereConditions' => ['state' => self::UNREAD_STATUS]];
+        $unreadCondition = ['whereConditions' => ['state' => Notification::UNREAD_STATUS]];
         $conditions = array_merge($options, $unreadCondition);
 
         return $this->getNotificationsFactory($userId, $conditions);
@@ -304,7 +303,7 @@ class NotifierComponent extends Component
         if (!$notificationId) {
             $query = $this->table->find('all')->where([
                 'user_id' => $user,
-                'state' => self::UNREAD_STATUS
+                'state' => Notification::UNREAD_STATUS
             ]);
         } else {
             $query = $this->table->find('all')->where([
@@ -315,8 +314,8 @@ class NotifierComponent extends Component
         }
 
         foreach ($query as $item) {
-            $item->set('state', self::READ_STATUS);
-            $model->save($item);
+            $item->set('state', Notification::READ_STATUS);
+            $this->table->save($item);
         }
     }
 

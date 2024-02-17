@@ -24,6 +24,8 @@ use Cake\Utility\Text;
 class Notification extends Entity
 {
 
+    const UNREAD_STATUS = 1;
+    const READ_STATUS = 0;
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
      *
@@ -87,10 +89,10 @@ class Notification extends Entity
     {
         $templates = Configure::read('Notifier.templates');
 
-        if (array_key_exists($this->_properties['template'], $templates)) {
-            $template = $templates[$this->_properties['template']];
+        if (array_key_exists($this->get('template'), $templates)) {
+            $template = $templates[$this->get('template')];
 
-            $vars = json_decode($this->_properties['vars'], true);
+            $vars = json_decode($this->get('vars'), true);
 
             return Text::insert($template['title'], $vars);
         }
@@ -110,10 +112,10 @@ class Notification extends Entity
     {
         $templates = Configure::read('Notifier.templates');
 
-        if (array_key_exists($this->_properties['template'], $templates)) {
-            $template = $templates[$this->_properties['template']];
+        if (array_key_exists($this->get('template'), $templates)) {
+            $template = $templates[$this->get('template')];
 
-            $vars = json_decode($this->_properties['vars'], true);
+            $vars = json_decode($this->get('vars'), true);
 
             return Text::insert($template['body'], $vars);
         }
@@ -129,10 +131,7 @@ class Notification extends Entity
      */
     protected function _getUnread()
     {
-        if ($this->_properties['state'] === 1) {
-            return true;
-        }
-        return false;
+        return $this->get('state') == self::UNREAD_STATUS;
     }
 
     /**
@@ -144,10 +143,7 @@ class Notification extends Entity
      */
     protected function _getRead()
     {
-        if ($this->_properties['state'] === 0) {
-            return true;
-        }
-        return false;
+        return $this->get('state') == self::READ_STATUS;
     }
 
     /**
