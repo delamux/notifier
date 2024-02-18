@@ -182,7 +182,7 @@ class NotificationManager
      * @param array $options Options.
      * @return void
      */
-    public function addTemplate($name, $options = [])
+    public function addTemplate($name, $options = []): void
     {
         $_options = [
             'title' => 'Notification',
@@ -204,7 +204,7 @@ class NotificationManager
      * @param string|null $type The type like `title` or `body`. Leave empty to get the whole template.
      * @return array|string|bool
      */
-    public function getTemplate($name, $type = null)
+    public function getTemplate($name, $type = null): array|string|bool
     {
         $templates = Configure::read('Notifier.templates');
 
