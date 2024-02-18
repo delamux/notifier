@@ -106,12 +106,11 @@ class NotifierComponent extends Component
     {
         $stateCondition = [];
         if (isset($state)) {
-            $stateCondition = ['state' => $state];
+            $stateCondition = ['whereConditions' => ['state' => $state]];
         }
 
         return $this->getNotificationsFactory($userId, $stateCondition);
     }
-
 
 
     /**
@@ -136,13 +135,13 @@ class NotifierComponent extends Component
      * }
      * * @return array
      */
-    public function getAllNotificationsBy($userId, $options)
+    public function getAllNotificationsBy($userId, $options = [])
     {
         if (array_key_exists('state', $options)) {
             unset($options['state']);
         }
 
-        return $this->getNotificationsFactory($userId, $conditions);
+        return $this->getNotificationsFactory($userId, $options);
     }
 
     /**
@@ -170,7 +169,7 @@ class NotifierComponent extends Component
      * }
      * * @return array
      */
-    public function getReadNotificationsBy($userId, $options)
+    public function getReadNotificationsBy($userId, $options = [])
     {
         $readCondition = ['whereConditions' => ['state' => Notification::READ_STATUS]];
         $conditions = array_merge($options, $readCondition);
@@ -200,7 +199,7 @@ class NotifierComponent extends Component
      * }
      * @return array
      */
-    public function getUnReadNotificationsBy($userId, $options)
+    public function getUnReadNotificationsBy($userId, $options = [])
     {
         $unreadCondition = ['whereConditions' => ['state' => Notification::UNREAD_STATUS]];
         $conditions = array_merge($options, $unreadCondition);
@@ -217,7 +216,7 @@ class NotifierComponent extends Component
      * }
      * @return array
      */
-    private function getNotificationsFactory($userId, $options)
+    private function getNotificationsFactory($userId, $options = [])
     {
         if (!isset($userId)) {
             $userId = $this->Controller->Auth->user('id');
@@ -240,7 +239,7 @@ class NotifierComponent extends Component
         return $this->table
             ->find()
             ->where($whereConditions)
-            ->order()
+            ->order($order)
             ->toArray();
     }
 
@@ -301,12 +300,12 @@ class NotifierComponent extends Component
         }
 
         if (!$notificationId) {
-            $query = $this->table->find('all')->where([
+            $query = $this->table->find()->where([
                 'user_id' => $user,
                 'state' => Notification::UNREAD_STATUS
             ]);
         } else {
-            $query = $this->table->find('all')->where([
+            $query = $this->table->find()->where([
                 'user_id' => $user,
                 'id' => $notificationId
 
