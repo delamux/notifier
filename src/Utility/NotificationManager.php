@@ -35,7 +35,7 @@ class NotificationManager
      * @param null $manager Possible different manager. (Helpfull for testing).
      * @return NotificationManager
      */
-    public static function instance($manager = null)
+    public static function instance($manager = null): NotificationManager
     {
         if ($manager instanceof NotificationManager) {
             static::$_generalManager = $manager;
@@ -108,7 +108,7 @@ class NotificationManager
      * @param array $data
      * @return array
      */
-    private function mergeRecipientList($data)
+    private function mergeRecipientList($data): ?array
     {
         $users = $data['users'];
         foreach ((array)$data['recipientLists'] as $recipientList) {
@@ -136,7 +136,7 @@ class NotificationManager
      * @param array $userIds Array with id's of users.
      * @return void
      */
-    public function addRecipientList($name, $userIds)
+    public function addRecipientList($name, $userIds): void
     {
         Configure::write('Notifier.recipientLists.' . $name, $userIds);
     }
@@ -150,7 +150,7 @@ class NotificationManager
      * @param string $name The name of the list.
      * @return array|null
      */
-    public function getRecipientList($name)
+    public function getRecipientList($name): ?array
     {
         return Configure::read('Notifier.recipientLists.' . $name);
     }
