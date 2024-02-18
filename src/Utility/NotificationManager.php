@@ -74,7 +74,7 @@ class NotificationManager
      * @param array $data Data with options.
      * @return string The tracking_id to follow the notification.
      */
-    public function notify($data)
+    public function notify($data): string
     {
         $model = TableRegistry::getTableLocator()->get('Bakkerij/Notifier.Notifications');
 

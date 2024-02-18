@@ -12,11 +12,10 @@
  * @since         1.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace Bakkerij\Notifier\Model\Table;
 
-use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 /**
@@ -37,7 +36,7 @@ class NotificationsTable extends Table
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->setTable('notifications');
         $this->setDisplayField('title');
@@ -51,15 +50,15 @@ class NotificationsTable extends Table
      * @param \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator
             ->add('id', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('id', 'create')
-            ->allowEmpty('title')
-            ->allowEmpty('body')
+            ->allowEmptyString('id', 'create')
+            ->allowEmptyString('title')
+            ->allowEmptyString('body')
             ->add('state', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('state');
+            ->allowEmptyString('state');
 
         return $validator;
     }

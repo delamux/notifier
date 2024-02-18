@@ -49,7 +49,7 @@ class Notification extends Entity
      * @param string $vars Data.
      * @return mixed
      */
-    protected function _getVars($vars) : array
+    protected function _getVars($vars): array|string|null
     {
         $array = json_decode($vars, true);
 
@@ -68,7 +68,7 @@ class Notification extends Entity
      * @param array $vars Data.
      * @return string
      */
-    protected function _setVars($vars) : array
+    protected function _setVars($vars): string|null
     {
         if (is_array($vars)) {
             return json_encode($vars);
@@ -86,7 +86,7 @@ class Notification extends Entity
      *
      * @return string
      */
-    protected function _getTitle() : string
+    protected function _getTitle(): string
     {
         $templates = Configure::read('Notifier.templates');
 
@@ -130,7 +130,7 @@ class Notification extends Entity
      *
      * @return bool
      */
-    protected function _getUnread() : bool
+    protected function _getUnread(): bool
     {
         return $this->get('state') == self::UNREAD_STATUS;
     }
