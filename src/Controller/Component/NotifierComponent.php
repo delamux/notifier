@@ -291,9 +291,9 @@ class NotifierComponent extends Component
      *
      * @param int $notificationId Id of the notification.
      * @param int|null $user Id of the user. Else the id of the session will be taken.
-     * @return void
+     * @return false
      */
-    public function markAsRead($notificationId = null, $user = null): void
+    public function markAsRead($notificationId = null, $user = null): bool
     {
         if (!$user) {
             $user = $this->Controller->Auth->user('id');
@@ -312,10 +312,19 @@ class NotifierComponent extends Component
             ]);
         }
 
-        foreach ($query as $item) {
-            $item->set('state', Notification::READ_STATUS);
-            $this->table->save($item);
+        $notifications = [];
+        foreach ($query as $notification) {
+            $notification->set('state', Notification::READ_STATUS);
+            $notifications[] = $notification;
         }
+
+        $savedNotifications = $this->table->saveMany($notifications);
+
+        if (!$savedNotifications) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -347,6 +356,11 @@ class NotifierComponent extends Component
      */
     public function notify($data): string
     {
-        return NotificationManager::instance()->notify($data);
+        $notification = NotificationManager::instance()->notify($data);
+        if (!$notification) {
+            $this->getController()->Flash->error(__d('bakkerij/notifier', 'An error occurred sending the notifications'));
+        }
+
+        return $notification;
     }
 }

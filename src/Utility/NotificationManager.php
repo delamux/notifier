@@ -99,7 +99,11 @@ class NotificationManager
             $entities[] = $entity;
         }
 
-        $model->saveMany($entities);
+        $notificationsSaved = $model->saveMany($entities);
+
+        if (!$notificationsSaved) {
+            return $notificationsSaved;
+        }
 
         return $data['tracking_id'];
     }
