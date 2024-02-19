@@ -17,6 +17,7 @@ namespace Bakkerij\Notifier\Utility;
 
 use Bakkerij\Notifier\Model\Entity\Notification;
 use Cake\Core\Configure;
+use Cake\ORM\Exception\PersistenceFailedException;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -72,7 +73,7 @@ class NotificationManager
      * ```
      *
      * @param array $data Data with options.
-     * @return string The tracking_id to follow the notification.
+     * @return string|false The tracking_id to follow the notification.
      */
     public function notify($data)
     {
@@ -99,7 +100,12 @@ class NotificationManager
             $entities[] = $entity;
         }
 
-        $model->saveMany($entities);
+
+        $notificationsSaved = $model->saveMany($entities);
+
+        if (!$notificationsSaved) {
+            return $notificationsSaved;
+        }
 
         return $data['tracking_id'];
     }

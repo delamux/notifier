@@ -312,6 +312,8 @@ class NotifierComponent extends Component
             ]);
         }
 
+        dd($query);
+
         foreach ($query as $item) {
             $item->set('state', Notification::READ_STATUS);
             $this->table->save($item);
