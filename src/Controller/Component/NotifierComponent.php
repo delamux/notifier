@@ -18,6 +18,7 @@ namespace Bakkerij\Notifier\Controller\Component;
 use Bakkerij\Notifier\Model\Entity\Notification;
 use Bakkerij\Notifier\Utility\NotificationManager;
 use Cake\Controller\Component;
+use Cake\Database\Expression\QueryExpression;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -291,7 +292,7 @@ class NotifierComponent extends Component
      *
      * @param int $notificationId Id of the notification.
      * @param int|null $user Id of the user. Else the id of the session will be taken.
-     * @return void
+     * @return void|false
      */
     public function markAsRead($notificationId = null, $user = null)
     {
@@ -312,11 +313,16 @@ class NotifierComponent extends Component
             ]);
         }
 
-        dd($query);
+        $notifications = [];
+        foreach ($query as $notification) {
+            $notification->set('state', Notification::READ_STATUS);
+            $notifications[] = $notification;
+        }
 
-        foreach ($query as $item) {
-            $item->set('state', Notification::READ_STATUS);
-            $this->table->save($item);
+        $savedNotifications = $this->table->saveMany($notifications);
+
+        if (!$savedNotifications) {
+            return false;
         }
     }
 
