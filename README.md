@@ -202,7 +202,10 @@ The `Bakkerij/Notifier.Notifier` component can be used in Controllers:
 
 The component has the following methods available:
 
-- `getNotifications`
+- `getNotifications` (deprecated)
+- `getAllNotificationsBy`
+- `getReadNotificationsBy`
+- `getUnReadNotificationsBy`
 - `countNotifications`
 - `markAsRead`
 - `notify`
