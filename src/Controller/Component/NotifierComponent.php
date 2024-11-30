@@ -55,7 +55,7 @@ class NotifierComponent extends Component
      * @param array $config Config.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -71,7 +71,7 @@ class NotifierComponent extends Component
      * @param \Cake\Controller\Controller $controller Controller.
      * @return void
      */
-    public function setController($controller)
+    public function setController($controller): void
     {
         $this->Controller = $controller;
     }
@@ -103,7 +103,7 @@ class NotifierComponent extends Component
      *
      * @deprecated 1.3 use getReadNotifications or getUnreadNotifications instead.
      */
-    public function getNotifications($userId = null, $state = null)
+    public function getNotifications($userId = null, $state = null): array
     {
         $stateCondition = [];
         if (isset($state)) {
@@ -136,7 +136,7 @@ class NotifierComponent extends Component
      * }
      * * @return array
      */
-    public function getAllNotificationsBy($userId, $options = [])
+    public function getAllNotificationsBy($userId, $options = []): array
     {
         if (array_key_exists('state', $options)) {
             unset($options['state']);
@@ -170,7 +170,7 @@ class NotifierComponent extends Component
      * }
      * * @return array
      */
-    public function getReadNotificationsBy($userId, $options = [])
+    public function getReadNotificationsBy($userId, $options = []): array
     {
         $readCondition = ['whereConditions' => ['state' => Notification::READ_STATUS]];
         $conditions = array_merge($options, $readCondition);
@@ -200,7 +200,7 @@ class NotifierComponent extends Component
      * }
      * @return array
      */
-    public function getUnReadNotificationsBy($userId, $options = [])
+    public function getUnReadNotificationsBy($userId, $options = []): array
     {
         $unreadCondition = ['whereConditions' => ['state' => Notification::UNREAD_STATUS]];
         $conditions = array_merge($options, $unreadCondition);
@@ -217,7 +217,7 @@ class NotifierComponent extends Component
      * }
      * @return array
      */
-    private function getNotificationsFactory($userId, $options = [])
+    private function getNotificationsFactory($userId, $options = []): array
     {
         if (!isset($userId)) {
             $userId = $this->Controller->Auth->user('id');
@@ -269,7 +269,7 @@ class NotifierComponent extends Component
      * @param bool|null $state The state of notifications: `true` for unread, `false` for read, `null` for all.
      * @return int
      */
-    public function countNotifications($userId = null, $state = null)
+    public function countNotifications(?int $userId = null, ?int $state = null): int
     {
         if (!$userId) {
             $userId = $this->Controller->Auth->user('id');
@@ -294,7 +294,7 @@ class NotifierComponent extends Component
      * @param int|null $user Id of the user. Else the id of the session will be taken.
      * @return void|false
      */
-    public function markAsRead($notificationId = null, $user = null)
+    public function markAsRead($notificationId = null, $user = null): bool
     {
         if (!$user) {
             $user = $this->Controller->Auth->user('id');
@@ -324,6 +324,8 @@ class NotifierComponent extends Component
         if (!$savedNotifications) {
             return false;
         }
+
+        return true;
     }
 
     /**
@@ -353,8 +355,13 @@ class NotifierComponent extends Component
      * @param array $data Data with options.
      * @return string
      */
-    public function notify($data)
+    public function notify($data): string
     {
-        return NotificationManager::instance()->notify($data);
+        $notification = NotificationManager::instance()->notify($data);
+        if (!$notification) {
+            $this->getController()->Flash->error(__d('bakkerij/notifier', 'An error occurred sending the notifications'));
+        }
+
+        return $notification;
     }
 }

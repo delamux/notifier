@@ -36,7 +36,7 @@ class NotificationManager
      * @param null $manager Possible different manager. (Helpfull for testing).
      * @return NotificationManager
      */
-    public static function instance($manager = null)
+    public static function instance($manager = null): NotificationManager
     {
         if ($manager instanceof NotificationManager) {
             static::$_generalManager = $manager;
@@ -75,7 +75,7 @@ class NotificationManager
      * @param array $data Data with options.
      * @return string|false The tracking_id to follow the notification.
      */
-    public function notify($data)
+    public function notify($data): string
     {
         $model = TableRegistry::getTableLocator()->get('Bakkerij/Notifier.Notifications');
 
@@ -100,7 +100,6 @@ class NotificationManager
             $entities[] = $entity;
         }
 
-
         $notificationsSaved = $model->saveMany($entities);
 
         if (!$notificationsSaved) {
@@ -114,7 +113,7 @@ class NotificationManager
      * @param array $data
      * @return array
      */
-    private function mergeRecipientList($data)
+    private function mergeRecipientList($data): ?array
     {
         $users = $data['users'];
         foreach ((array)$data['recipientLists'] as $recipientList) {
@@ -142,7 +141,7 @@ class NotificationManager
      * @param array $userIds Array with id's of users.
      * @return void
      */
-    public function addRecipientList($name, $userIds)
+    public function addRecipientList($name, $userIds): void
     {
         Configure::write('Notifier.recipientLists.' . $name, $userIds);
     }
@@ -156,7 +155,7 @@ class NotificationManager
      * @param string $name The name of the list.
      * @return array|null
      */
-    public function getRecipientList($name)
+    public function getRecipientList($name): ?array
     {
         return Configure::read('Notifier.recipientLists.' . $name);
     }
@@ -188,7 +187,7 @@ class NotificationManager
      * @param array $options Options.
      * @return void
      */
-    public function addTemplate($name, $options = [])
+    public function addTemplate($name, $options = []): void
     {
         $_options = [
             'title' => 'Notification',
@@ -210,7 +209,7 @@ class NotificationManager
      * @param string|null $type The type like `title` or `body`. Leave empty to get the whole template.
      * @return array|string|bool
      */
-    public function getTemplate($name, $type = null)
+    public function getTemplate($name, $type = null): array|string|bool
     {
         $templates = Configure::read('Notifier.templates');
 

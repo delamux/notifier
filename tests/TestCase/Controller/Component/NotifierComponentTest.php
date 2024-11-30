@@ -32,7 +32,7 @@ class NotifierComponentTest extends TestCase
         'plugin.bakkerij\Notifier.notifications'
     ];
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -58,7 +58,7 @@ class NotifierComponentTest extends TestCase
         $this->Notifier = new NotifierComponent($registry);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         unset($this->Notifier);
         unset($this->Manager);

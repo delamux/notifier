@@ -12,6 +12,7 @@
  * @since         1.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace Bakkerij\Notifier\Model\Entity;
 
 use Cake\Core\Configure;
@@ -48,7 +49,7 @@ class Notification extends Entity
      * @param string $vars Data.
      * @return mixed
      */
-    protected function _getVars($vars)
+    protected function _getVars($vars): array|string|null
     {
         $array = json_decode($vars, true);
 
@@ -67,7 +68,7 @@ class Notification extends Entity
      * @param array $vars Data.
      * @return string
      */
-    protected function _setVars($vars)
+    protected function _setVars($vars): string|null
     {
         if (is_array($vars)) {
             return json_encode($vars);
@@ -85,7 +86,7 @@ class Notification extends Entity
      *
      * @return string
      */
-    protected function _getTitle()
+    protected function _getTitle(): string
     {
         $templates = Configure::read('Notifier.templates');
 
@@ -108,7 +109,7 @@ class Notification extends Entity
      *
      * @return string
      */
-    protected function _getBody()
+    protected function _getBody(): string
     {
         $templates = Configure::read('Notifier.templates');
 
@@ -129,7 +130,7 @@ class Notification extends Entity
      *
      * @return bool
      */
-    protected function _getUnread()
+    protected function _getUnread(): bool
     {
         return $this->get('state') == self::UNREAD_STATUS;
     }
@@ -141,7 +142,7 @@ class Notification extends Entity
      *
      * @return bool
      */
-    protected function _getRead()
+    protected function _getRead(): bool
     {
         return $this->get('state') == self::READ_STATUS;
     }

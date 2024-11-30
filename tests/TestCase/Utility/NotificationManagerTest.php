@@ -26,7 +26,7 @@ class NotificationManagerTest extends TestCase
         'plugin.bakkerij\Notifier.notifications'
     ];
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->Manager = NotificationManager::instance();
@@ -34,7 +34,7 @@ class NotificationManagerTest extends TestCase
         $this->Model = TableRegistry::get('Bakkerij/Notifier.Notifications');
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         unset($this->Manager);
         unset($this->Model);

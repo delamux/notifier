@@ -28,13 +28,13 @@ class NotificationsTableTest extends TestCase
         'plugin.bakkerij\Notifier.notifications',
     ];
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->Notifications = TableRegistry::get('Bakkerij/Notifier.Notifications');
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         unset($this->Notifications);
 
