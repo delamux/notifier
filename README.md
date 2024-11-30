@@ -1,11 +1,11 @@
 # Notifier plugin for CakePHP
 
-[![Travis](https://img.shields.io/travis/bakkerij/notifier.svg?style=flat-square)](https://travis-ci.org/bakkerij/notifier) 
+[![Travis](https://img.shields.io/travis/bakkerij/notifier.svg?style=flat-square)](https://travis-ci.org/bakkerij/notifier)
 [![Packagist](https://img.shields.io/packagist/dt/cakemanager/cakephp-notifier.svg?style=flat-square)](https://packagist.org/packages/bakkerij/notifier)
 [![Packagist](https://img.shields.io/packagist/v/bakkerij/notifier.svg?style=flat-square)](https://packagist.org/packages/bakkerij/notifier)
 [![Gitter](https://img.shields.io/gitter/room/bakkerij/notifier.js.svg?style=flat-square)](https://gitter.im/bakkerij/notifier)
 
-This plugin allows you to integrate a simple notification system into your application. 
+This plugin allows you to integrate a simple notification system into your application.
 
 ## Installation
 
@@ -27,6 +27,29 @@ After loading the plugin you need to migrate the tables for the plugin using:
 
 ```
     bin/cake migrations migrate -p Bakkerij/Notifier
+```
+
+> NOTE:
+> Another good practice to run the migrations is to copy all the migrations of the plugin in the migrations folder of your
+app directory and change the timestamp of the files to be aligned with the rest of your mgirations.
+
+
+## Configuration
+
+Create a file in config folder like notifier.php where you can create the instance of of the notificationManager and
+start the configuration
+
+```php
+// config/notifier.php
+<?php
+$notificationManager = new \Bakkerij\Notifier\Utility\NotificationManager();
+```
+
+Then in your bootstrap you can add the file
+
+```php
+// config/bootstrap.php
+require __DIR__ . DS . 'notifier.php';
 ```
 
 ## Sending notifications
@@ -81,10 +104,10 @@ You can register them with:
 ```php
     $notificationManager->addRecipientList('administrators', [1,2,3,4]);
 ```
-    
+
 Now we have created a list of recipients called `administrators`.
 
-This can be used later on when we send a new notification: 
+This can be used later on when we send a new notification:
 
 ```php
     $notificationManager->notify([
@@ -106,7 +129,7 @@ You can easily retrieve notifications via the `getNotifications` method. Some ex
 
     // getting a list of all notifications of the user with id 2
     $this->Notifier->getNotifications(2);
-    
+
     // getting a list of all unread notifications
     $this->Notifier->allNotificationList(2, true);
 
@@ -124,7 +147,7 @@ Getting counts of read/unread notifications can be done via the `countNotificati
 
     // getting a number of all notifications of the user with id 2
     $this->Notifier->countNotifications(2);
-    
+
     // getting a number of all unread notifications
     $this->Notifier->countNotificationList(2, true);
 
@@ -153,11 +176,11 @@ The following getters can be used at your notifications entity:
 - `read` - Boolean if the notification is read yet.
 
 Example:
-    
+
 ```php
     // returns true or false
     $entity->get('unread');
-    
+
     // returns the full output like 'Bob Mulder has posted a new blog named My Great New Post'
     $entity->get('body');
 ```
@@ -202,13 +225,17 @@ The `Bakkerij/Notifier.Notifier` component can be used in Controllers:
 
 The component has the following methods available:
 
-- `getNotifications`
+- `getNotifications` (deprecated)
+- `getAllNotificationsBy`
+- `getReadNotificationsBy`
+- `getUnReadNotificationsBy`
 - `countNotifications`
 - `markAsRead`
 - `notify`
 
-## Keep in touch
+## Credits
 
-If you need some help or got ideas for this plugin, feel free to chat at [Gitter](https://gitter.im/bakkerij/notifier).
+This plugin have been forked from [Norifier](https://github.com/bakkerij/notifier) originally developed by [bakkerij](https://github.com/bakkerij).
+Thank you for their work and contributions to the open-source community.
 
 Pull Requests are always more than welcome!

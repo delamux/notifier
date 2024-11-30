@@ -18,6 +18,7 @@ namespace Bakkerij\Notifier\Controller\Component;
 use Bakkerij\Notifier\Model\Entity\Notification;
 use Bakkerij\Notifier\Utility\NotificationManager;
 use Cake\Controller\Component;
+use Cake\Database\Expression\QueryExpression;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -291,7 +292,7 @@ class NotifierComponent extends Component
      *
      * @param int $notificationId Id of the notification.
      * @param int|null $user Id of the user. Else the id of the session will be taken.
-     * @return false
+     * @return void|false
      */
     public function markAsRead($notificationId = null, $user = null): bool
     {
