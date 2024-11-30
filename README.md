@@ -29,6 +29,29 @@ After loading the plugin you need to migrate the tables for the plugin using:
     bin/cake migrations migrate -p Bakkerij/Notifier
 ```
 
+> NOTE:
+> Another good practice to run the migrations is to copy all the migrations of the plugin in the migrations folder of your
+app directory and change the timestamp of the files to be aligned with the rest of your mgirations.
+
+
+## Configuration
+
+Create a file in config folder like notifier.php where you can create the instance of of the notificationManager and
+start the configuration
+
+```php
+// config/notifier.php
+<?php
+$notificationManager = new \Bakkerij\Notifier\Utility\NotificationManager();
+```
+
+Then in your bootstrap you can add the file
+
+```php
+// config/bootstrap.php
+require __DIR__ . DS . 'notifier.php';
+```
+
 ## Sending notifications
 
 #### Templates
@@ -215,3 +238,4 @@ The component has the following methods available:
 This plugin have been forked from [Norifier](https://github.com/bakkerij/notifier) originally developed by [bakkerij](https://github.com/bakkerij).
 Thank you for their work and contributions to the open-source community.
 
+Pull Requests are always more than welcome!
