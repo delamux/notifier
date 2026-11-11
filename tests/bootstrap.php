@@ -1,50 +1,61 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Bakkerij (https://github.com/bakkerij)
- * Copyright (c) https://github.com/bakkerij
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @copyright     Copyright (c) https://github.com/bakkerij
- * @link          https://github.com/bakkerij Bakkerij Project
- * @since         1.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * Test suite bootstrap for the Notifier plugin (CakePHP 4.5).
  */
 
 use Cake\Core\Configure;
+use Cake\Core\Plugin;
 use Cake\Datasource\ConnectionManager;
+use Cake\TestSuite\Fixture\SchemaLoader;
 
-require_once 'vendor/autoload.php';
+$findRoot = function (string $root): string {
+    do {
+        $lastRoot = $root;
+        $root = dirname($root);
+        if (is_dir($root . '/vendor/cakephp/cakephp')) {
+            return $root;
+        }
+    } while ($root !== $lastRoot);
 
-define('ROOT', dirname(__DIR__) . DS);
-define('CAKE_CORE_INCLUDE_PATH', ROOT . 'vendor' . DS . 'cakephp' . DS . 'cakephp');
-define('CORE_PATH', ROOT . 'vendor' . DS . 'cakephp' . DS . 'cakephp' . DS);
-define('CAKE', CORE_PATH . 'src' . DS);
-define('CONFIG', ROOT . 'config' . DS);
+    throw new RuntimeException('Cannot find the root of the application, unable to run tests');
+};
+$root = $findRoot(__FILE__);
+unset($findRoot);
+chdir($root);
 
-require CAKE . 'Core/ClassLoader.php';
+require_once $root . '/vendor/autoload.php';
 
-$loader = new Cake\Core\ClassLoader;
-$loader->register();
+define('ROOT', $root . DIRECTORY_SEPARATOR);
+define('APP_DIR', 'TestApp');
+define('APP', ROOT . 'tests' . DIRECTORY_SEPARATOR . 'TestApp' . DIRECTORY_SEPARATOR);
+define('TMP', sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'notifier-tests' . DIRECTORY_SEPARATOR);
+define('CACHE', TMP . 'cache' . DIRECTORY_SEPARATOR);
+define('LOGS', TMP . 'logs' . DIRECTORY_SEPARATOR);
+define('CONFIG', ROOT . 'config' . DIRECTORY_SEPARATOR);
+define('CAKE_CORE_INCLUDE_PATH', ROOT . 'vendor' . DIRECTORY_SEPARATOR . 'cakephp' . DIRECTORY_SEPARATOR . 'cakephp');
+define('CORE_PATH', CAKE_CORE_INCLUDE_PATH . DIRECTORY_SEPARATOR);
+define('CAKE', CORE_PATH . 'src' . DIRECTORY_SEPARATOR);
 
-require_once CORE_PATH . 'config' . DS . 'bootstrap.php';
+require_once CORE_PATH . 'config' . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 Configure::write('debug', true);
+Configure::write('App', ['namespace' => 'TestApp', 'encoding' => 'UTF-8', 'paths' => ['templates' => [], 'locales' => []]]);
 
-// Ensure default test connection is defined
-if (!getenv('db_class')) {
-    putenv('db_class=Cake\Database\Driver\Sqlite');
-    putenv('db_dsn=sqlite::memory:');
-}
-
-ConnectionManager::config('test', [
-    'className' => 'Cake\Database\Connection',
-    'driver' => getenv('db_class'),
-    'dsn' => getenv('db_dsn'),
-    'database' => getenv('db_database'),
-    'username' => getenv('db_login'),
-    'password' => getenv('db_password'),
-    'timezone' => 'UTC'
+\Cake\Cache\Cache::setConfig([
+    '_cake_core_' => ['className' => \Cake\Cache\Engine\NullEngine::class],
+    '_cake_model_' => ['className' => \Cake\Cache\Engine\NullEngine::class],
 ]);
+
+if (!getenv('DB_URL')) {
+    putenv('DB_URL=sqlite:///:memory:');
+}
+ConnectionManager::setConfig('test', ['url' => getenv('DB_URL'), 'timezone' => 'UTC']);
+
+Plugin::getCollection()->add(new \Cake\Core\BasePlugin([
+    'name' => 'Bakkerij/Notifier',
+    'path' => ROOT,
+]));
+
+(new SchemaLoader())->loadInternalFile(__DIR__ . DIRECTORY_SEPARATOR . 'schema.php', 'test');

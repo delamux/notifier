@@ -2,13 +2,14 @@
     "name": "bakkerij/notifier",
     "description": "Notifier plugin for CakePHP",
     "type": "cakephp-plugin",
+    "license": "MIT",
     "require": {
-        "php": ">=5.4.16",
-        "cakephp/cakephp": "^4.0"
+        "php": ">=8.0",
+        "cakephp/cakephp": "^4.5"
     },
     "require-dev": {
-        "phpunit/phpunit": "*",
-        "cakephp/cakephp-codesniffer": "2.*"
+        "phpunit/phpunit": "^9.6",
+        "cakephp/cakephp-codesniffer": "^4.7"
     },
     "autoload": {
         "psr-4": {
@@ -19,6 +20,15 @@
         "psr-4": {
             "Bakkerij\\Notifier\\Test\\": "tests",
             "Cake\\Test\\": "./vendor/cakephp/cakephp/tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --colors=always",
+        "cs-check": "phpcs --standard=vendor/cakephp/cakephp-codesniffer/CakePHP src tests"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     }
 }

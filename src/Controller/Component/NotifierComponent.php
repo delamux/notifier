@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Bakkerij (https://github.com/bakkerij)
  * Copyright (c) https://github.com/bakkerij
@@ -16,43 +18,48 @@
 namespace Bakkerij\Notifier\Controller\Component;
 
 use Bakkerij\Notifier\Model\Entity\Notification;
+use Bakkerij\Notifier\Model\Table\NotificationsTable;
 use Bakkerij\Notifier\Utility\NotificationManager;
 use Cake\Controller\Component;
-use Cake\Database\Expression\QueryExpression;
-use Cake\ORM\TableRegistry;
+use Cake\Controller\Controller;
+use Cake\Datasource\FactoryLocator;
+use Cake\ORM\Query;
 
 /**
- * Notifier component
+ * Notifier component.
+ *
+ * Read state is selected with explicit methods instead of a boolean/int flag:
+ * - get{All,Read,UnRead}NotificationsBy()
+ * - count{All,Read,Unread}Notifications()
+ *
+ * User ids may be integers or strings (UUID). When no user id is given, the identifier of the
+ * current request identity (cakephp/authentication) is used, falling back to AuthComponent.
  */
 class NotifierComponent extends Component
 {
     /**
      * Default configuration.
      *
-     * @var array
+     * - UsersModel: The model where the users are stored.
+     *
+     * @var array<string, mixed>
      */
     protected $_defaultConfig = [
-        'UsersModel' => 'Users'
+        'UsersModel' => 'Users',
     ];
 
     /**
-     * The controller.
-     *
-     * @var \Cake\Controller\Controller
+     * @var \Cake\Controller\Controller|null
      */
-    private $Controller = null;
+    private ?Controller $Controller = null;
 
     /**
-     * The controller.
-     *
-     * @var \Cake\ORM\Table
+     * @var \Bakkerij\Notifier\Model\Table\NotificationsTable
      */
-    private $table = null;
+    private NotificationsTable $table;
 
     /**
-     * initialize
-     *
-     * @param array $config Config.
+     * @param array<string, mixed> $config Config.
      * @return void
      */
     public function initialize(array $config): void
@@ -60,308 +67,260 @@ class NotifierComponent extends Component
         parent::initialize($config);
 
         $this->Controller = $this->_registry->getController();
-        $this->table = TableRegistry::getTableLocator()->get('Bakkerij/Notifier.Notifications');
+        /** @var \Bakkerij\Notifier\Model\Table\NotificationsTable $table */
+        $table = FactoryLocator::get('Table')->get('Bakkerij/Notifier.Notifications');
+        $this->table = $table;
     }
 
     /**
-     * setController
-     *
      * Setter for the Controller property.
      *
      * @param \Cake\Controller\Controller $controller Controller.
      * @return void
      */
-    public function setController($controller): void
+    public function setController(Controller $controller): void
     {
         $this->Controller = $controller;
     }
 
     /**
-     * getNotifications
+     * Returns one notification of the user, or null when it does not exist or belongs to
+     * another user.
      *
-     * Returns a list of notifications.
-     *
-     * ### Examples
-     * ```
-     *  // if the user is logged in, this is the way to get all notifications
-     *  $this->Notifier->getNotifications();
-     *
-     *  // for a specific user, use the first parameter for the user_id
-     *  $this->Notifier->getNotifications(1);
-     *
-     *  // default all notifications are returned. Use the second parameter to define read / unread:
-     *
-     *  // get all unread notifications
-     *  $this->Notifier->getNotifications(1, true);
-     *
-     *  // get all read notifications
-     *  $this->Notifier->getNotifications(1, false);
-     * ```
-     * @param int|null $userId Id of the user.
-     * @param bool|null $state The state of notifications: `true` for unread, `false` for read, `null` for all.
-     * @return array
-     *
-     * @deprecated 1.3 use getReadNotifications or getUnreadNotifications instead.
+     * @param int $notificationId Id of the notification.
+     * @param string|int|null $userId Id of the user. Defaults to the current identity.
+     * @return \Bakkerij\Notifier\Model\Entity\Notification|null
      */
-    public function getNotifications($userId = null, $state = null): array
+    public function getNotification(int $notificationId, string|int|null $userId = null): ?Notification
     {
-        $stateCondition = [];
-        if (isset($state)) {
-            $stateCondition = ['whereConditions' => ['state' => $state]];
-        }
+        /** @var \Bakkerij\Notifier\Model\Entity\Notification|null $notification */
+        $notification = $this->table->find()
+            ->where([
+                'Notifications.id' => $notificationId,
+                'Notifications.user_id' => $this->resolveUserId($userId),
+            ])
+            ->first();
 
-        return $this->getNotificationsFactory($userId, $stateCondition);
+        return $notification;
     }
 
+    /**
+     * @param string|int|null $userId Id of the user.
+     * @param bool|int|null $state `true`/`1` for unread, `false`/`0` for read, `null` for all.
+     * @return array<\Bakkerij\Notifier\Model\Entity\Notification>
+     * @deprecated 1.3 Use getAllNotificationsBy(), getReadNotificationsBy() or
+     *   getUnReadNotificationsBy() instead.
+     */
+    public function getNotifications(string|int|null $userId = null, bool|int|null $state = null): array
+    {
+        if ($state === null) {
+            return $this->getAllNotificationsBy($userId);
+        }
+
+        return $state ? $this->getUnReadNotificationsBy($userId) : $this->getReadNotificationsBy($userId);
+    }
 
     /**
-     * getNotifications
+     * All notifications of the user, newest first.
      *
-     * Returns a list of notifications.
-     *
-     * ### Examples
-     * ```
-     *  // if the user is logged in, this is the way to get all notifications
-     *  $this->Notifier->getNotifications();
-     *
-     *  // for a specific user, use the first parameter for the user_id
-     *  $this->Notifier->getNotifications(1);
-     *
-     *
-     * ```
-     * @param int $userId
-     * @param array $options {
-     * @type array $whereConditions Conditions used for filtering.
-     * @type string $order The order in which results should be returned.
+     * @param string|int|null $userId Id of the user. Defaults to the current identity.
+     * @param array<string, mixed> $options {
+     *     @type array $whereConditions Extra conditions.
+     *     @type array $order Order clause (defaults to `created DESC`).
      * }
-     * * @return array
+     * @return array<\Bakkerij\Notifier\Model\Entity\Notification>
      */
-    public function getAllNotificationsBy($userId, $options = []): array
+    public function getAllNotificationsBy(string|int|null $userId = null, array $options = []): array
     {
-        if (array_key_exists('state', $options)) {
-            unset($options['state']);
-        }
+        unset($options['whereConditions']['state']);
 
         return $this->getNotificationsFactory($userId, $options);
     }
 
     /**
-     * getNotifications
+     * Read notifications of the user, newest first.
      *
-     * Returns a list of notifications.
-     *
-     * ### Examples
-     * ```
-     *  // if the user is logged in, this is the way to get all notifications
-     *  $this->Notifier->getNotifications();
-     *
-     *  // for a specific user, use the first parameter for the user_id
-     *  $this->Notifier->getNotifications(1);
-     *
-     * // for and specific user you can add also ORM conditions for the where and order
-     *
-     * $this->Notifier->getNotifications(1, [whereConditions => ['']]);
-     *
-     * ```
-     * @param int $userId
-     * @param array $options {
-     * @type array $whereConditions Conditions used for filtering.
-     * @type string $order The order in which results should be returned.
-     * }
-     * * @return array
+     * @param string|int|null $userId Id of the user. Defaults to the current identity.
+     * @param array<string, mixed> $options See getAllNotificationsBy().
+     * @return array<\Bakkerij\Notifier\Model\Entity\Notification>
      */
-    public function getReadNotificationsBy($userId, $options = []): array
+    public function getReadNotificationsBy(string|int|null $userId = null, array $options = []): array
     {
-        $readCondition = ['whereConditions' => ['state' => Notification::READ_STATUS]];
-        $conditions = array_merge($options, $readCondition);
-
-        return $this->getNotificationsFactory($userId, $conditions);
+        return $this->getNotificationsFactory($userId, $this->withState($options, Notification::READ_STATUS));
     }
 
     /**
-     * getNotifications
+     * Unread notifications of the user, newest first.
      *
-     * Returns a list of notifications.
-     *
-     * ### Examples
-     * ```
-     *  // if the user is logged in, this is the way to get all notifications
-     *  $this->Notifier->getNotifications();
-     *
-     *  // for a specific user, use the first parameter for the user_id
-     *  $this->Notifier->getNotifications(1);
-     *
-     *
-     * ```
-     * @param int $userId
-     * @param array $options {
-     * @type array $whereConditions Conditions used for filtering.
-     * @type string $order The order in which results should be returned.
-     * }
-     * @return array
+     * @param string|int|null $userId Id of the user. Defaults to the current identity.
+     * @param array<string, mixed> $options See getAllNotificationsBy().
+     * @return array<\Bakkerij\Notifier\Model\Entity\Notification>
      */
-    public function getUnReadNotificationsBy($userId, $options = []): array
+    public function getUnReadNotificationsBy(string|int|null $userId = null, array $options = []): array
     {
-        $unreadCondition = ['whereConditions' => ['state' => Notification::UNREAD_STATUS]];
-        $conditions = array_merge($options, $unreadCondition);
-
-        return $this->getNotificationsFactory($userId, $conditions);
+        return $this->getNotificationsFactory($userId, $this->withState($options, Notification::UNREAD_STATUS));
     }
 
     /**
-     * @param int $userId
-     * @param array $options {
-     * @type array $whereConditions Conditions used for filtering.
-     * @type string $order The order in which results should be returned.
-     * @type string $state The state of the items to be processed.
-     * }
-     * @return array
+     * Number of notifications of the user, read or not.
+     *
+     * @param string|int|null $userId Id of the user. Defaults to the current identity.
+     * @return int
      */
-    private function getNotificationsFactory($userId, $options = []): array
+    public function countAllNotifications(string|int|null $userId = null): int
     {
-        if (!isset($userId)) {
-            $userId = $this->Controller->Auth->user('id');
+        return $this->userQuery($userId)->count();
+    }
+
+    /**
+     * Number of read notifications of the user.
+     *
+     * @param string|int|null $userId Id of the user. Defaults to the current identity.
+     * @return int
+     */
+    public function countReadNotifications(string|int|null $userId = null): int
+    {
+        return $this->userQuery($userId)
+            ->where(['Notifications.state' => Notification::READ_STATUS])
+            ->count();
+    }
+
+    /**
+     * Number of unread notifications of the user.
+     *
+     * @param string|int|null $userId Id of the user. Defaults to the current identity.
+     * @return int
+     */
+    public function countUnreadNotifications(string|int|null $userId = null): int
+    {
+        return $this->userQuery($userId)
+            ->where(['Notifications.state' => Notification::UNREAD_STATUS])
+            ->count();
+    }
+
+    /**
+     * @param string|int|null $userId Id of the user.
+     * @param bool|int|null $state `true`/`1` for unread, `false`/`0` for read, `null` for all.
+     * @return int
+     * @deprecated 1.3 Use countAllNotifications(), countReadNotifications() or
+     *   countUnreadNotifications() instead.
+     */
+    public function countNotifications(string|int|null $userId = null, bool|int|null $state = null): int
+    {
+        if ($state === null) {
+            return $this->countAllNotifications($userId);
         }
 
-        $whereConditions = [
-            'Notifications.user_id' => $userId,
-        ];
+        return $state ? $this->countUnreadNotifications($userId) : $this->countReadNotifications($userId);
+    }
 
-        $order = ['created' => 'desc'];
+    /**
+     * Marks a notification of the user as read. Without a notification id, all unread
+     * notifications of the user are marked as read.
+     *
+     * @param int|null $notificationId Id of the notification.
+     * @param string|int|null $user Id of the user. Defaults to the current identity.
+     * @return bool
+     */
+    public function markAsRead(?int $notificationId = null, string|int|null $user = null): bool
+    {
+        $conditions = ['user_id' => $this->resolveUserId($user)];
+        if ($notificationId === null) {
+            $conditions['state'] = Notification::UNREAD_STATUS;
+        } else {
+            $conditions['id'] = $notificationId;
+        }
 
-        if (array_key_exists('whereConditions', $options)) {
+        $notifications = [];
+        foreach ($this->table->find()->where($conditions) as $notification) {
+            $notification->set('state', Notification::READ_STATUS);
+            $notifications[] = $notification;
+        }
+
+        return (bool)$this->table->saveMany($notifications);
+    }
+
+    /**
+     * Sends notifications to specific users. See NotificationManager::notify().
+     *
+     * @param array<string, mixed> $data Data with options.
+     * @return string|false The tracking id, or false if the notifications could not be saved.
+     */
+    public function notify(array $data): string|false
+    {
+        $notification = NotificationManager::instance()->notify($data);
+
+        if (!$notification) {
+            $this->getController()->Flash->error(
+                __d('bakkerij/notifier', 'An error occurred sending the notifications')
+            );
+        }
+
+        return $notification;
+    }
+
+    /**
+     * @param string|int|null $userId Id of the user.
+     * @param array<string, mixed> $options Options (whereConditions, order).
+     * @return array<\Bakkerij\Notifier\Model\Entity\Notification>
+     */
+    private function getNotificationsFactory(string|int|null $userId, array $options = []): array
+    {
+        $whereConditions = ['Notifications.user_id' => $this->resolveUserId($userId)];
+        if (!empty($options['whereConditions'])) {
             $whereConditions = array_merge($whereConditions, $options['whereConditions']);
         }
+        $order = $options['order'] ?? ['Notifications.created' => 'desc'];
 
-        if (array_key_exists('order', $options)) {
-            $order = array_merge($whereConditions, $options['order']);
-        }
-
-        return $this->table
-            ->find()
+        return $this->table->find()
             ->where($whereConditions)
             ->order($order)
             ->toArray();
     }
 
     /**
-     * countNotifications
-     *
-     * Returns a number of notifications.
-     *
-     * ### Examples
-     * ```
-     *  // if the user is logged in, this is the way to count all notifications
-     *  $this->Notifier->countNotifications();
-     *
-     *  // for a specific user, use the first parameter for the user_id
-     *  $this->Notifier->countNotifications(1);
-     *
-     *  // default all notifications are counted. Use the second parameter to define read / unread:
-     *
-     *  // count all unread notifications
-     *  $this->Notifier->countNotifications(1, true);
-     *
-     *  // count all read notifications
-     *  $this->Notifier->countNotifications(1, false);
-     * ```
-     * @param int|null $userId Id of the user.
-     * @param bool|null $state The state of notifications: `true` for unread, `false` for read, `null` for all.
-     * @return int
+     * @param array<string, mixed> $options Options.
+     * @param int $state Notification state.
+     * @return array<string, mixed>
      */
-    public function countNotifications(?int $userId = null, ?int $state = null): int
+    private function withState(array $options, int $state): array
     {
-        if (!$userId) {
-            $userId = $this->Controller->Auth->user('id');
-        }
+        $options['whereConditions'] = array_merge($options['whereConditions'] ?? [], ['state' => $state]);
 
-        $query = $this->table->find()->where(['Notifications.user_id' => $userId]);
-
-        if (!is_null($state)) {
-            $query->where(['Notifications.state' => $state]);
-        }
-
-        return $query->count();
+        return $options;
     }
 
     /**
-     * markAsRead
-     *
-     * Used to mark a notification as read.
-     * If no notificationId is given, all notifications of the chosen user will be marked as read.
-     *
-     * @param int $notificationId Id of the notification.
-     * @param int|null $user Id of the user. Else the id of the session will be taken.
-     * @return void|false
+     * @param string|int|null $userId Id of the user.
+     * @return \Cake\ORM\Query
      */
-    public function markAsRead($notificationId = null, $user = null): bool
+    private function userQuery(string|int|null $userId): Query
     {
-        if (!$user) {
-            $user = $this->Controller->Auth->user('id');
-        }
-
-        if (!$notificationId) {
-            $query = $this->table->find()->where([
-                'user_id' => $user,
-                'state' => Notification::UNREAD_STATUS
-            ]);
-        } else {
-            $query = $this->table->find()->where([
-                'user_id' => $user,
-                'id' => $notificationId
-
-            ]);
-        }
-
-        $notifications = [];
-        foreach ($query as $notification) {
-            $notification->set('state', Notification::READ_STATUS);
-            $notifications[] = $notification;
-        }
-
-        $savedNotifications = $this->table->saveMany($notifications);
-
-        if (!$savedNotifications) {
-            return false;
-        }
-
-        return true;
+        return $this->table->find()->where(['Notifications.user_id' => $this->resolveUserId($userId)]);
     }
 
     /**
-     * notify
+     * Id of the given user, or of the current identity when none is given.
      *
-     * Sends notifications to specific users.
-     * The first parameter `$data` is an array with multiple options.
-     *
-     * ### Options
-     * - `users` - An array or int with id's of users who will receive a notification.
-     * - `roles` - An array or int with id's of roles which all users ill receive a notification.
-     * - `template` - The template wich will be used.
-     * - `vars` - The variables used in the template.
-     *
-     * ### Example
-     * ```
-     *  NotificationManager::instance()->notify([
-     *      'users' => 1,
-     *      'template' => 'newOrder',
-     *      'vars' => [
-     *          'receiver' => $receiver->name
-     *          'total' => $order->total
-     *      ],
-     *  ]);
-     * ```
-     *
-     * @param array $data Data with options.
-     * @return string
+     * @param string|int|null $userId Id of the user.
+     * @return string|int|null
      */
-    public function notify($data): string
+    private function resolveUserId(string|int|null $userId): string|int|null
     {
-        $notification = NotificationManager::instance()->notify($data);
-        if (!$notification) {
-            $this->getController()->Flash->error(__d('bakkerij/notifier', 'An error occurred sending the notifications'));
+        if ($userId !== null && $userId !== '') {
+            return $userId;
         }
 
-        return $notification;
+        $controller = $this->Controller ?? $this->getController();
+        $identity = $controller->getRequest()->getAttribute('identity');
+        if (is_object($identity) && method_exists($identity, 'getIdentifier')) {
+            return $identity->getIdentifier();
+        }
+
+        if ($controller->components()->has('Auth')) {
+            return $controller->components()->get('Auth')->user('id');
+        }
+
+        return null;
     }
 }

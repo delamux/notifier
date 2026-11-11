@@ -28,43 +28,6 @@ class NotificationsFixture extends TestFixture
      *
      * @var array
      */
-    // @codingStandardsIgnoreStart
-    public $fields = [
-        'id' => [
-            'type' => 'integer',
-            'autoIncrement' => true
-        ],
-        'template' => [
-            'type' => 'string'
-        ],
-        'vars' => [
-            'type' => 'text'
-        ],
-        'user_id' => [
-            'type' => 'integer'
-        ],
-        'state' => [
-            'type' => 'integer'
-        ],
-        'tracking_id' => [
-            'type' => 'text'
-        ],
-        'created' => [
-            'type' => 'datetime',
-            'default' => null
-        ],
-        'modified' => [
-            'type' => 'datetime',
-            'default' => null
-        ],
-        '_constraints' => [
-            'primary' => ['type' => 'primary', 'columns' => ['id'], 'length' => []],
-        ],
-        '_options' => [
-            'engine' => 'InnoDB', 'collation' => 'latin1_swedish_ci'
-        ],
-    ];
-    // @codingStandardsIgnoreEnd
 
     /**
      * Records

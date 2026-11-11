@@ -88,12 +88,12 @@ class Notification extends Entity
      */
     protected function _getTitle(): string
     {
-        $templates = Configure::read('Notifier.templates');
+        $templates = (array)Configure::read('Notifier.templates');
 
-        if (array_key_exists($this->get('template'), $templates)) {
+        if (array_key_exists((string)$this->get('template'), $templates)) {
             $template = $templates[$this->get('template')];
 
-            $vars = json_decode($this->get('vars'), true);
+            $vars = (array)json_decode((string)$this->get('vars'), true);
 
             return Text::insert($template['title'], $vars);
         }
@@ -111,12 +111,12 @@ class Notification extends Entity
      */
     protected function _getBody(): string
     {
-        $templates = Configure::read('Notifier.templates');
+        $templates = (array)Configure::read('Notifier.templates');
 
-        if (array_key_exists($this->get('template'), $templates)) {
+        if (array_key_exists((string)$this->get('template'), $templates)) {
             $template = $templates[$this->get('template')];
 
-            $vars = json_decode($this->get('vars'), true);
+            $vars = (array)json_decode((string)$this->get('vars'), true);
 
             return Text::insert($template['body'], $vars);
         }
