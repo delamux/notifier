@@ -75,7 +75,7 @@ class NotificationManager
      * @param array $data Data with options.
      * @return string|false The tracking_id to follow the notification.
      */
-    public function notify($data): string
+    public function notify($data): string|false
     {
         $model = TableRegistry::getTableLocator()->get('Bakkerij/Notifier.Notifications');
 
@@ -103,7 +103,7 @@ class NotificationManager
         $notificationsSaved = $model->saveMany($entities);
 
         if (!$notificationsSaved) {
-            return $notificationsSaved;
+            return false;
         }
 
         return $data['tracking_id'];
@@ -113,9 +113,9 @@ class NotificationManager
      * @param array $data
      * @return array
      */
-    private function mergeRecipientList($data): ?array
+    private function mergeRecipientList($data): array
     {
-        $users = $data['users'];
+        $users = (array)$data['users'];
         foreach ((array)$data['recipientLists'] as $recipientList) {
             $list = (array)$this->getRecipientList($recipientList);
             $users = array_merge($users, $list);
