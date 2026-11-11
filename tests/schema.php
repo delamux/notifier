@@ -13,7 +13,7 @@ return [
             'template' => ['type' => 'string', 'length' => 150, 'null' => true],
             'vars' => ['type' => 'text', 'null' => true],
             'user_id' => ['type' => 'string', 'length' => 36, 'null' => true],
-            // Como en la migración real (20150612200406_notifier_initial): nuevas = 1 (no leída).
+            // Same as the real migration (20150612200406_notifier_initial): new notifications = 1 (unread).
             'state' => ['type' => 'integer', 'null' => true, 'default' => 1],
             'tracking_id' => ['type' => 'text', 'null' => true],
             'created' => ['type' => 'datetime', 'null' => true],
