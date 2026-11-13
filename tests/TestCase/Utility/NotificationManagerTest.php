@@ -16,14 +16,23 @@ namespace Bakkerij\Notifier\Test\TestCase\Utility;
 
 use Bakkerij\Notifier\Utility\NotificationManager;
 use Cake\Core\Configure;
-use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
 
 class NotificationManagerTest extends TestCase
 {
 
-    public $fixtures = [
-        'plugin.bakkerij\Notifier.notifications'
+    /**
+     * @var mixed
+     */
+    public $Manager;
+
+    /**
+     * @var mixed
+     */
+    public $Model;
+
+    protected array $fixtures = [
+        'plugin.Bakkerij/Notifier.Notifications',
     ];
 
     public function setUp(): void
@@ -31,7 +40,7 @@ class NotificationManagerTest extends TestCase
         parent::setUp();
         $this->Manager = NotificationManager::instance();
 
-        $this->Model = TableRegistry::get('Bakkerij/Notifier.Notifications');
+        $this->Model = $this->getTableLocator()->get('Bakkerij/Notifier.Notifications');
     }
 
     public function tearDown(): void

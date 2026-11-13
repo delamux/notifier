@@ -18,7 +18,7 @@ namespace Bakkerij\Notifier\Utility;
 use Bakkerij\Notifier\Model\Entity\Notification;
 use Cake\Core\Configure;
 use Cake\ORM\Exception\PersistenceFailedException;
-use Cake\ORM\TableRegistry;
+use Cake\Datasource\FactoryLocator;
 
 /**
  * Notifier component
@@ -77,7 +77,7 @@ class NotificationManager
      */
     public function notify($data): string|false
     {
-        $model = TableRegistry::getTableLocator()->get('Bakkerij/Notifier.Notifications');
+        $model = FactoryLocator::get('Table')->get('Bakkerij/Notifier.Notifications');
 
         $_data = [
             'users' => [],

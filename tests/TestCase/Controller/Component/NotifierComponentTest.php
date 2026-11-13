@@ -24,7 +24,7 @@ class NotifierComponentTest extends TestCase
     /**
      * @var array<string>
      */
-    protected $fixtures = [
+    protected array $fixtures = [
         'plugin.Bakkerij/Notifier.Notifications',
     ];
 
@@ -77,7 +77,7 @@ class NotifierComponentTest extends TestCase
     {
         $this->Manager->notify(['users' => [self::ALICE, self::ALICE, self::ALICE, self::BOB, self::BOB]]);
         $ids = [self::ALICE => [], self::BOB => []];
-        foreach ($this->getTableLocator()->get('Bakkerij/Notifier.Notifications')->find()->order(['id' => 'asc']) as $n) {
+        foreach ($this->getTableLocator()->get('Bakkerij/Notifier.Notifications')->find()->orderBy(['id' => 'asc']) as $n) {
             if (isset($ids[$n->user_id])) {
                 $ids[$n->user_id][] = (int)$n->id;
             }

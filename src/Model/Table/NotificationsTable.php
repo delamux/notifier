@@ -54,7 +54,7 @@ class NotificationsTable extends Table
     {
         $validator
             ->add('id', 'valid', ['rule' => 'numeric'])
-            ->allowEmptyString('id', 'create')
+            ->allowEmptyString('id', null, 'create')
             ->allowEmptyString('title')
             ->allowEmptyString('body')
             ->add('state', 'valid', ['rule' => 'numeric'])

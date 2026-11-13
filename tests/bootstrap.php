@@ -44,7 +44,7 @@ Configure::write('debug', true);
 Configure::write('App', ['namespace' => 'TestApp', 'encoding' => 'UTF-8', 'paths' => ['templates' => [], 'locales' => []]]);
 
 \Cake\Cache\Cache::setConfig([
-    '_cake_core_' => ['className' => \Cake\Cache\Engine\NullEngine::class],
+    '_cake_translations_' => ['className' => \Cake\Cache\Engine\NullEngine::class],
     '_cake_model_' => ['className' => \Cake\Cache\Engine\NullEngine::class],
 ]);
 

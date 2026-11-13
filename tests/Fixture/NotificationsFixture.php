@@ -22,19 +22,12 @@ use Cake\TestSuite\Fixture\TestFixture;
  */
 class NotificationsFixture extends TestFixture
 {
-
-    /**
-     * Fields
-     *
-     * @var array
-     */
-
     /**
      * Records
      *
      * @var array
      */
-    public $records = [
+    public array $records = [
         [
             'template' => 'newNotification',
             'vars' => '{"name":"Bob"}',

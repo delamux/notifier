@@ -23,7 +23,7 @@ use Bakkerij\Notifier\Utility\NotificationManager;
 use Cake\Controller\Component;
 use Cake\Controller\Controller;
 use Cake\Datasource\FactoryLocator;
-use Cake\ORM\Query;
+use Cake\ORM\Query\SelectQuery;
 
 /**
  * Notifier component.
@@ -44,7 +44,7 @@ class NotifierComponent extends Component
      *
      * @var array<string, mixed>
      */
-    protected $_defaultConfig = [
+    protected array $_defaultConfig = [
         'UsersModel' => 'Users',
     ];
 
@@ -274,7 +274,7 @@ class NotifierComponent extends Component
 
         return $this->table->find()
             ->where($whereConditions)
-            ->order($order)
+            ->orderBy($order)
             ->toArray();
     }
 
@@ -292,9 +292,9 @@ class NotifierComponent extends Component
 
     /**
      * @param string|int|null $userId Id of the user.
-     * @return \Cake\ORM\Query
+     * @return \Cake\ORM\Query\SelectQuery
      */
-    private function userQuery(string|int|null $userId): Query
+    private function userQuery(string|int|null $userId): SelectQuery
     {
         return $this->table->find()->where(['Notifications.user_id' => $this->resolveUserId($userId)]);
     }
